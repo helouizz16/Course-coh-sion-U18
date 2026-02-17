@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#0f172a">
+
+    <title>Course d'Orientation - Gare</title>
+    <style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#jeu {
+  max-width: 600px;
+  margin: auto;
+}
+
+.team-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 15px;
+  margin: 10px auto;
+  display: block;
+  width: 260px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.team-btn:hover {
+  transform: scale(1.05);
+}
+
+.question {
+  background: rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.indice {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #facc15;
+  text-align: center;
+  font-size: 18px;
+}
+
+input[type="radio"] {
+  margin-right: 8px;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 15px;
+  margin-top: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+    <h1>Course d'Orientation</h1>
+
+    <!-- Sélection équipe -->
+    <div id="choixEquipe">
+        <button class="team-btn" onclick="demarrerEquipe(0)">FC Cherche Encore</button>
+        <button class="team-btn" onclick="demarrerEquipe(1)">FC Crampons Perdus</button>
+        <button class="team-btn" onclick="demarrerEquipe(2)">FC C'est Pas Gagné</button>
+        <button class="team-btn" onclick="demarrerEquipe(3)">FC Les Perdus du Terrain</button>
+    </div>
+
+    <div id="jeu"></div>
+
+    <script>
+        // Données des équipes
+        const equipes = [
+            { nom: "FC Cherche Encore", dernierSiteAvantPiege: "Scénéo" },
+            { nom: "FC Crampons Perdus", dernierSiteAvantPiege: "Théâtre" }, 
+            { nom: "FC C'est Pas Gagné", dernierSiteAvantPiege: "Maison du Marais" },
+            { nom: "FC Les Perdus du Terrain", dernierSiteAvantPiege: "Jardin Public" }
+        ];
+
+        // Données de l'étape "Jardin public"
+        const etapeGare = {
+            lieu: "Gare",
+            theme: "Situation d'arbitrage",
+            qcm: [
+                {question: "Pendant un coup franc, un attaquant se place tout près du mur défensif pour gêner le placement adverse. Que doit faire l’arbitre ?", options: ["Laisser jouer, ce n’est pas une faute", "Demander à l’attaquant de reculer à la distance réglementaire", "Donne un penalty immédiat", "Mettre un carton rouge"]},
+                {question: "Lors d’un contre, un attaquant se trouve derrière le dernier défenseur adverse quand son coéquipier lui passe le ballon. Il reçoit le ballon et marque. Quelle est la décision de l’arbitre ?", options: ["But validé", "Hors‑jeu et coup franc indirect pour l’équipe adverse", "Penalty pour l’attaque", "Balle à terre"]},
+                {question: "Le ballon sort par la ligne de but après avoir été touché en dernier par un défenseur sans qu’un but soit marqué. Quelle est la remise en jeu ?", options: ["Six mètre", "Corner pour l’équipe offensive", "Touche", "Penalty"]},
+                {question: "Un défenseur passe le ballon en retrait à son gardien, qui le contrôle avec les mains dans sa surface de réparation. L’arbitre doit siffler :", options: ["Pénalty", "Coup franc indirect avec un carton jaune pour le gardien", "Coup franc indirect", "Rien"]}
+            ],
+            indiceCoffre: "le 6 est à côté du 1",
+            afficherProchainLieu: "Rendez-vous aux Ruines Saint-Bertin !",
+            indiceNextQR: "L'observation sera la clé"
+        };
+
+        let equipeCourante = null;
+
+        // Démarrage équipe
+        function demarrerEquipe(index) {
+            equipeCourante = equipes[index];
+            document.getElementById("choixEquipe").style.display = "none";
+            afficherQCM();
+        }
+
+        // Affichage QCM
+        function afficherQCM() {
+        let html = `<h2 style="text-align:center">${etapeGare.lieu}</h2>`;
+            html += `<p style="text-align:center;opacity:0.8">${etapeGare.theme}</p>`;
+            etapeGare.qcm.forEach((q,indexQ) => {
+                html += `<div class="question"><p>${q.question}</p>`;
+                q.options.forEach(option => {
+                    html += `
+                        <label>
+                            <input type="radio" name="question${indexQ}" value="${option}"> ${option}
+                        </label><br>
+                    `;
+                });
+                html += `</div>`;
+            });
+            html += `<button onclick="validerReponses()" style="width:100%">Valider mes réponses</button>`;
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Validation réponses
+        function validerReponses() {
+            const reponsesEquipe = [];
+            etapeGare.qcm.forEach((q,indexQ) => {
+                const selected = document.querySelector(`input[name="question${indexQ}"]:checked`);
+                reponsesEquipe.push(selected ? selected.value : null);
+            });
+
+            // Afficher indices
+            afficherIndices();
+
+            // Envoyer les réponses vers Google Sheet
+            envoyerReponses(reponsesEquipe);
+        }
+
+        // Affichage indices avec adaptation pour le piège
+        function afficherIndices() {
+            let html = `<h2>${etapeGare.lieu}</h2>`;
+            html += `<div class="indice">🔐 Indice coffre : ${etapeGare.indiceCoffre}</div>`;
+
+            // Adaptation selon équipe pour le piège
+            if(equipeCourante.dernierSiteAvantPiege === etapeGare.lieu){
+                html += `<p class="indice"> Où aller ensuite ? Rendez-vous à la plaine ! </p>`;
+                html += `<p class="indice">Indice pour trouver le QR code : insérer image IA</p>`;
+            } else {
+                html += `<div class="indice">🏁 Direction : Les Ruines Saint-Bertin </div>`;
+                html += `<p class="indice">Indice pour trouver le QR code : ${etapeGare.indiceNextQR}</p>`;
+            }
+
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Envoi réponses vers Google Sheet via Web App
+        function envoyerReponses(reponses){
+            fetch("https://script.google.com/macros/s/AKfycbxJ9Q8JWNVyAtoKESKnKhpLQ9-belWEraQAEuqY5UNpJ4POAZKL4jI4sgEhN-aACZy-fA/exec", {  // Remplacer par la même URL que pour Jardin public et Cathédrale
+                method: "POST",
+                body: JSON.stringify({equipe: equipeCourante.nom, lieu: etapeGare.lieu, reponses: reponses}),
+                headers: {"Content-Type": "application/json"}
+            })
+            .then(res => res.text())
+            .then(data => console.log("Réponses envoyées :", data))
+            .catch(err => console.error("Erreur :", err));
+        }
+        document.addEventListener("click", e => {
+             if(e.target.tagName === "BUTTON"){
+             e.target.style.transform = "scale(0.95)";
+            setTimeout(()=>e.target.style.transform="",150);
+              }
+        });
+    </script>
+</body>
+</html>

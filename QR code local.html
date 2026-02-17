@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course d'Orientation</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h1 { color: #1E90FF; text-align: center; }
+        button { padding: 10px 20px; margin: 5px; border-radius: 6px; cursor: pointer; }
+        .team-btn { background-color: #1E90FF; color: white; display: block; width: 200px; margin: 10px auto; }
+        .team-btn:hover { background-color: #FFD700; color: black; }
+        #jeu { margin-top: 30px; text-align: center; }
+    </style>
+</head>
+<body>
+    <h1>Course d'Orientation - Choisissez votre équipe</h1>
+    <div id="choixEquipe">
+        <button class="team-btn" onclick="demarrerEquipe(0)">FC Cherche Encore</button>
+        <button class="team-btn" onclick="demarrerEquipe(1)">FC Crampons Perdus</button>
+        <button class="team-btn" onclick="demarrerEquipe(2)">FC C'est Pas Gagné</button>
+        <button class="team-btn" onclick="demarrerEquipe(3)">FC Les Perdus du Terrain</button>
+    </div>
+
+    <div id="jeu"></div>
+
+    <script>
+
+        const equipes = [
+            { nom: "FC Cherche Encore", ordreEtapes: [0,1,2,3,4,5,6,7], dernierSiteAvantPiege: 7 },
+            { nom: "FC Crampons Perdus", ordreEtapes: [3,4,5,6,7,0,1,2], dernierSiteAvantPiege: 2 },
+            { nom: "FC C'est Pas Gagné", ordreEtapes: [4,5,6,7,0,1,2,3], dernierSiteAvantPiege: 3 },
+            { nom: "FC Les Perdus du Terrain", ordreEtapes: [7,0,1,2,3,4,5,6], dernierSiteAvantPiege: 6 }
+        ];
+
+        const parcours = [
+            { lieu: "Jardin public", indiceDepart: "C'est la danse des ..." },
+            { lieu: "Cathédrale" },
+            { lieu: "Théâtre" },
+            { lieu: "Maison du marais", indiceDepart: "Voici Éole" },
+            { lieu: "Gare", indiceDepart: "En route pour un prochain voyage" },
+            { lieu: "Ruines Saint-Bertin" },
+            { lieu: "Lycée Ribot" },
+            { lieu: "Scénéo", indiceDepart: "Un petit plouf ?" }
+        ];
+
+        // ✅ Fonction appelée quand l'équipe est choisie
+        function demarrerEquipe(indexEquipe) {
+            const equipe = equipes[indexEquipe];
+
+            // Masquer la sélection d'équipe
+            document.getElementById("choixEquipe").style.display = "none";
+
+            // Afficher message de départ pour l'équipe
+            const premiereEtapeIndex = equipe.ordreEtapes[0];
+            const premiereEtape = parcours[premiereEtapeIndex];
+
+            document.getElementById("jeu").innerHTML = `
+                <h2>${equipe.nom}</h2>
+                <p>Votre point de départ : ${premiereEtape.lieu}</p>
+                <p>Indice : ${premiereEtape.indiceDepart}</p>
+            `;
+        }
+</script> 
+</body>
+</html>
+

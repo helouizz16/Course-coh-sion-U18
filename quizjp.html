@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#0f172a">
+    <title>Course d'Orientation - Jardin Public</title>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#jeu {
+  max-width: 600px;
+  margin: auto;
+}
+
+.team-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 15px;
+  margin: 10px auto;
+  display: block;
+  width: 260px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.team-btn:hover {
+  transform: scale(1.05);
+}
+
+.question {
+  background: rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.indice {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #facc15;
+  text-align: center;
+  font-size: 18px;
+}
+
+input[type="radio"] {
+  margin-right: 8px;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 15px;
+  margin-top: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+</style>
+
+</head>
+<body>
+    <h1>Course d'Orientation</h1>
+
+    <!-- Sélection équipe -->
+    <div id="choixEquipe">
+        <button class="team-btn" onclick="demarrerEquipe(0)">FC Cherche Encore</button>
+        <button class="team-btn" onclick="demarrerEquipe(1)">FC Crampons Perdus</button>
+        <button class="team-btn" onclick="demarrerEquipe(2)">FC C'est Pas Gagné</button>
+        <button class="team-btn" onclick="demarrerEquipe(3)">FC Les Perdus du Terrain</button>
+    </div>
+
+    <div id="jeu"></div>
+
+    <script>
+        // Données des équipes
+        const equipes = [
+            { nom: "FC Cherche Encore", dernierSiteAvantPiege: null },
+            { nom: "FC Crampons Perdus", dernierSiteAvantPiege: "Théâtre" }, 
+            { nom: "FC C'est Pas Gagné", dernierSiteAvantPiege: "Maison du Marais" },
+            { nom: "FC Les Perdus du Terrain", dernierSiteAvantPiege: "Jardin Public" }
+        ];
+
+        // Données de l'étape "Jardin public"
+        const etapeJardinPublic = {
+            lieu: "Jardin Public",
+            theme: "Environnement et écologie",
+            qcm: [
+                {question: "A quoi sert l'eau dans la nature ?", options: ["Parce que les poissons aiment les douches longues", "Parce qu'elle permet à la vie d'exister", "Pour remplir les gourdes oubliées", "Pour entraîner les flaques"]},
+                {question: "A quoi servent vraiment les plantes ?", options: ["À faire joli sur les photos instagram", "À produire de l'oxygène et nourrir les êtres vivants", "À donner du travail aux jardiniers", "À manger les ballons envoyés par Manon et Lounna"]},
+                {question: "Pourquoi les arbres sont importants ?", options: ["Ils donnent de l'ombre aux supporters", "Ils produisent de l'oxygène et abritent les animaux", "Ils servent de poteaux de but", "Ils empêchent les nuages de passer"]},
+                {question: "Quelle action est écolo ?", options: ["Laisser les bouteilles sur le terrain", "Ramasser ses déchets après l'entraînement", "Planter un arbre après chaque but", "Cacher les déchets derrière le banc"]}
+            ],
+            indiceCoffre: "1",
+            afficherProchainLieu: "Rendez-vous à la Cathédrale",
+            indiceNextQR: "c"
+        };
+
+        let equipeCourante = null;
+
+        // Démarrage équipe
+        function demarrerEquipe(index) {
+            equipeCourante = equipes[index];
+            document.getElementById("choixEquipe").style.display = "none";
+            afficherQCM();
+        }
+
+        // Affichage QCM
+        function afficherQCM() {
+            let html = `<h2 style="text-align:center">${etapeJardinPublic.lieu}</h2>`;
+            html += `<p style="text-align:center;opacity:0.8">${etapeJardinPublic.theme}</p>`;
+            etapeJardinPublic.qcm.forEach((q,indexQ) => {
+                html += `<div class="question"><p>${q.question}</p>`;
+                q.options.forEach(option => {
+                    html += `
+                        <label>
+                            <input type="radio" name="question${indexQ}" value="${option}"> ${option}
+                        </label><br>
+                    `;
+                });
+                html += `</div>`;
+            });
+                html += `<button onclick="validerReponses()" style="width:100%">Valider mes réponses</button>`;
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Validation réponses
+        function validerReponses() {
+            const reponsesEquipe = [];
+            etapeJardinPublic.qcm.forEach((q,indexQ) => {
+                const selected = document.querySelector(`input[name="question${indexQ}"]:checked`);
+                reponsesEquipe.push(selected ? selected.value : null);
+            });
+
+            // Afficher indices
+            afficherIndices();
+
+            // Envoyer les réponses vers Google Sheet
+            envoyerReponses(reponsesEquipe);
+        }
+
+        // Affichage indices avec adaptation pour le piège
+        function afficherIndices() {
+            let html = `<h2>${etapeJardinPublic.lieu}</h2>`;
+                html += `<div class="indice">🔐 Indice coffre : ${etapeJardinPublic.indiceCoffre}</div>`;
+
+
+            // Adaptation selon équipe pour le piège
+            if(equipeCourante.dernierSiteAvantPiege === etapeJardinPublic.lieu){
+                html += `<div class="indice">🏁 Direction : La plaine</div>`;
+                html += `<p class="indice">Indice pour trouver le QR code <div>`;
+                html += `<img src="https://i.imgur.com/6Gn4jYy.png" alt="Indice" style="max-width:100%; border-radius:12px; margin-top:15px;">`;
+            } else {
+                html += `<div class="indice">🏁 Direction : La Cathédrale</div>`;
+html += `<div class="indice">Indice pour le QR code :</div>`;
+html += `<img src="https://www.lespapillonsdejour.fr/wp-content/uploads/2022/09/frida-kahlo.jpg">`;
+            }
+
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Envoi réponses vers Google Sheet via Web App
+        function envoyerReponses(reponses){
+            fetch("https://script.google.com/macros/s/AKfycbxJ9Q8JWNVyAtoKESKnKhpLQ9-belWEraQAEuqY5UNpJ4POAZKL4jI4sgEhN-aACZy-fA/exec", {  // Remplacer par la même URL que pour Jardin public et Cathédrale
+                method: "POST",
+                body: JSON.stringify({equipe: equipeCourante.nom, lieu: etapeJardinPublic.lieu, reponses: reponses}),
+                headers: {"Content-Type": "application/json"}
+            })
+            .then(res => res.text())
+            .then(data => console.log("Réponses envoyées :", data))
+            .catch(err => console.error("Erreur :", err));
+        }
+        document.addEventListener("click", e => {
+             if(e.target.tagName === "BUTTON"){
+             e.target.style.transform = "scale(0.95)";
+            setTimeout(()=>e.target.style.transform="",150);
+              }
+        });
+    </script>
+</body>
+</html>

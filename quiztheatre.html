@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="theme-color" content="#0f172a">
+
+    <title>Course d'Orientation - Théâtre</title>
+    <style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  margin: 0;
+  padding: 15px;
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+  color: white;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#jeu {
+  max-width: 600px;
+  margin: auto;
+}
+
+.team-btn {
+  background: #22c55e;
+  color: white;
+  border: none;
+  padding: 15px;
+  margin: 10px auto;
+  display: block;
+  width: 260px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.team-btn:hover {
+  transform: scale(1.05);
+}
+
+.question {
+  background: rgba(255,255,255,0.08);
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 15px;
+}
+
+button {
+  padding: 14px;
+  margin-top: 15px;
+  border-radius: 12px;
+  border: none;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.indice {
+  margin-top: 20px;
+  font-weight: bold;
+  color: #facc15;
+  text-align: center;
+  font-size: 18px;
+}
+
+input[type="radio"] {
+  margin-right: 8px;
+}
+
+img {
+  max-width: 100%;
+  border-radius: 15px;
+  margin-top: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+}
+</style>
+</head>
+<body>
+    <h1>Course d'Orientation</h1>
+
+    <!-- Sélection équipe -->
+    <div id="choixEquipe">
+        <button class="team-btn" onclick="demarrerEquipe(0)">FC Cherche Encore</button>
+        <button class="team-btn" onclick="demarrerEquipe(1)">FC Crampons Perdus</button>
+        <button class="team-btn" onclick="demarrerEquipe(2)">FC C'est Pas Gagné</button>
+        <button class="team-btn" onclick="demarrerEquipe(3)">FC Les Perdus du Terrain</button>
+    </div>
+
+    <div id="jeu"></div>
+
+    <script>
+        // Données équipes avec info sur qui doit aller au piège
+        const equipes = [
+            { nom: "FC Cherche Encore", dernierSiteAvantPiege: null },
+            { nom: "FC Crampons Perdus", dernierSiteAvantPiege: "Théâtre" }, // cette équipe va à la plaine
+            { nom: "FC C'est Pas Gagné", dernierSiteAvantPiege: null },
+            { nom: "FC Les Perdus du Terrain", dernierSiteAvantPiege: null }
+        ];
+
+        // Étape Théâtre
+        const etapeTheatre = {
+            lieu: "Théâtre",
+            theme: "Coupe du Monde 2018",
+            qcm: [
+                {question: "Lors du premier match des Bleus (France–Australie), quel joueur français inscrit le premier but de la compétition ?", options: ["N'Golo Kanté", "Antoine Griezmann", "Samuel Umtiti", "Benjamin Pavard"]},
+                {question: "Quel adversaire a été éliminé par les Bleus lors d’un huitième de finale légendaire ?", options: ["Espagne", "Portugal", "Argentine", "Mexique"]},
+                {question: "Quel joueur français a marqué une volée extérieure du pied droit en huitième de finale ?", options: ["Raphaël Varane", "Benjamin Pavard", "Blaise Matuidi", "Kylian Mbappé"]},
+                {question: "En finale contre la Croatie, quel joueur français marque le quatrième but ?", options: ["Antoine Griezmann", "Paul Pogba", "Olivier Giroud", "Kylian Mbappé"]}
+            ],
+            indiceCoffre: "le 1 est en troisième position",
+            indiceNextQR: "Insérer dieu Éole"
+        };
+
+        let equipeCourante = null;
+
+        // Démarrage équipe
+        function demarrerEquipe(index) {
+            equipeCourante = equipes[index];
+            document.getElementById("choixEquipe").style.display = "none";
+            afficherQCM();
+        }
+
+        // Affichage QCM
+        function afficherQCM() {
+        let html = `<h2 style="text-align:center">${etapeTheatre.lieu}</h2>`;
+            html += `<p style="text-align:center;opacity:0.8">${etapeTheatre.theme}</p>`;
+            etapeTheatre.qcm.forEach((q,indexQ) => {
+                html += `<div class="question"><p>${q.question}</p>`;
+                q.options.forEach(option => {
+                    html += `
+                        <label>
+                            <input type="radio" name="question${indexQ}" value="${option}"> ${option}
+                        </label><br>
+                    `;
+                });
+                html += `</div>`;
+            });
+            html += `<button onclick="validerReponses()" style="width:100%">Valider mes réponses</button>`;
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Validation réponses
+        function validerReponses() {
+            const reponsesEquipe = [];
+            etapeTheatre.qcm.forEach((q,indexQ) => {
+                const selected = document.querySelector(`input[name="question${indexQ}"]:checked`);
+                reponsesEquipe.push(selected ? selected.value : null);
+            });
+
+            // Afficher indices
+            afficherIndices();
+
+            // Envoyer les réponses vers Google Sheet
+            envoyerReponses(reponsesEquipe);
+        }
+
+        // Affichage indices avec adaptation pour le piège
+        function afficherIndices() {
+            let html = `<h2>${etapeTheatre.lieu}</h2>`;
+            html += `<div class="indice">🔐 Indice coffre : ${etapeTheatre.indiceCoffre}</div>`;
+
+            // Adaptation selon équipe pour le piège
+            if(equipeCourante.dernierSiteAvantPiege === etapeTheatre.lieu){
+                html += `<div class="indice">🏁 Direction : La plaine</div>`;
+                html += `<p class="indice">Indice pour trouver le QR code <div>`;
+                html += `<img src="https://i.imgur.com/6Gn4jYy.png" alt="Indice" style="max-width:100%; border-radius:12px; margin-top:15px;">`;
+            } else {
+                html += `<div class="indice">🏁 Direction : La Maison du Marais </div>`;
+                html += `<div class="indice">Indice pour le QR code :</div>`;
+                html += `<img src="https://i.pinimg.com/736x/e7/b3/59/e7b359b3de088602290168b04f379c85.jpg" alt="Indice" style="max-width:100%; border-radius:12px; margin-top:15px;">`;
+            }
+
+            document.getElementById("jeu").innerHTML = html;
+        }
+
+        // Envoi réponses vers Google Sheet via Web App
+        function envoyerReponses(reponses){
+            fetch("https://script.google.com/macros/s/AKfycbxJ9Q8JWNVyAtoKESKnKhpLQ9-belWEraQAEuqY5UNpJ4POAZKL4jI4sgEhN-aACZy-fA/exec", {  // Remplacer par la même URL que pour Jardin public et Cathédrale
+                method: "POST",
+                body: JSON.stringify({equipe: equipeCourante.nom, lieu: etapeTheatre.lieu, reponses: reponses}),
+                headers: {"Content-Type": "application/json"}
+            })
+            .then(res => res.text())
+            .then(data => console.log("Réponses envoyées :", data))
+            .catch(err => console.error("Erreur :", err));
+        }
+        document.addEventListener("click", e => {
+             if(e.target.tagName === "BUTTON"){
+             e.target.style.transform = "scale(0.95)";
+            setTimeout(()=>e.target.style.transform="",150);
+              }
+        });
+    </script>
+</body>
+</html>
